@@ -27,6 +27,10 @@ class Record:
 class A(AgenticObject):
     """System prompt A."""
 
+    def __init__(self):
+        super().__init__()
+        self._state = 0
+
     @tool
     def f(self, verbose: bool = False) -> Any:
         """Return a simple status message. Pass verbose=True to get a detailed reply. Return type is unstructured."""
@@ -240,19 +244,21 @@ class ImgAnalyst(AgenticObject):
 
 ## Key Principles
 
-1. **Tool descriptions drive behavior** — The agent picks tools based on method docstrings. Be specific about arguments and return values.
+1. **Always call `super().__init__()`** — Every agentic object must call `super().__init__()` in `__init__` to initialize the agentic base. The example class `A` shows this pattern.
 
-2. **Return values guide reasoning** — The agent sees return values and uses them to decide next steps. Return meaningful summaries, not `None`.
+2. **Tool descriptions drive behavior** — The agent picks tools based on method docstrings. Be specific about arguments and return values.
 
-3. **Keep `@tool` count lean** — Each `@tool` is a decision point. Use `@sandbox` for high-frequency or composable logic.
+3. **Return values guide reasoning** — The agent sees return values and uses them to decide next steps. Return meaningful summaries, not `None`.
 
-4. **Type constraints prevent invalid data** — Enum, dataclass, union, and typed args let the type system block invalid inputs before they reach your code.
+4. **Keep `@tool` count lean** — Each `@tool` is a decision point. Use `@sandbox` for high-frequency or composable logic.
 
-5. **State lives on the object** — The agent manipulates state through tools. Persists within a persistent thread session.
+5. **Type constraints prevent invalid data** — Enum, dataclass, union, and typed args let the type system block invalid inputs before they reach your code.
 
-6. **Compose over duplication** — Build complex agents from atomic ones via multiple inheritance.
+6. **State lives on the object** — The agent manipulates state through tools. Persists within a persistent thread session.
 
-7. **Sandboxing for complex logic** — With `allow_code_execution=True`, the agent can write Python that calls `@sandbox` helpers for iterative or bulk operations.
+7. **Compose over duplication** — Build complex agents from atomic ones via multiple inheritance.
+
+8. **Sandboxing for complex logic** — With `allow_code_execution=True`, the agent can write Python that calls `@sandbox` helpers for iterative or bulk operations.
 
 ## Configuration
 
