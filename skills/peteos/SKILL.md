@@ -74,7 +74,7 @@ class B(A, AgenticObject):
 # ─────────────────────────────────────────────────
 # C: Composes A and B — shows full tool collection from MRO
 # ─────────────────────────────────────────────────
-@agentic_object(allow_media_access=True)
+@agentic_object(invoke_sub_agents=True)
 class C(A, B, AgenticObject):
     """System prompt C."""                           # 3rd in reverse-MRO: C, B, A
     # Inherits: g (from A), h (from B), _s (from A), _s2 (from B)
@@ -122,6 +122,19 @@ class E(AgenticObject):
 
 Escalate exposure only when the agent genuinely needs to decide autonomously. Prefer `@sandbox` for composable helpers the agent calls from Python — one `@tool` that loops via a sandbox helper beats many individual `@tool` calls.
 
+## @agentic_object Decorator Arguments
+
+The `@agentic_object` decorator configures what an agent can do. All arguments are optional booleans defaulting to `False` unless noted:
+
+| Argument | Default | What it enables |
+|---|---|---|
+| `allow_code_execution` | `False` | Agent writes and runs Python. Inside that code, `self` refers to the agentic object, so `@sandbox` and `@tool` methods are callable. |
+| `invoke_sub_agents` | `False` | Agent can delegate tasks to other agentic objects via `self.invoke(target=...)` from within a `@tool` method. |
+| `define_functions` | `False` | Agent can register new `@tool` methods on the object at runtime. |
+| `role` | `None` | Override the agent's role name. Takes a string. |
+
+Boolean flags OR together across the MRO — if any class sets one to `True`, the combined config has it as `True`. The `imports` set is unioned across all parents, and `import_aliases` dict is merged with later entries overriding earlier.
+
 ## Argument and Return Types
 
 Each `@tool` in the example demonstrates different argument and return patterns:
@@ -162,7 +175,7 @@ For `class C(A, B, AgenticObject)`, MRO is `[C, A, B, AgenticObject]`. Reversed 
 
 ### Flags OR Together
 
-`B` shows `@agentic_object(allow_code_execution=True)` — this flag was already `True` from `A`. Boolean flags AND across the MRO (both true → still true). The `import`s are unioned across all parents.
+`B` shows `@agentic_object(allow_code_execution=True)` — this flag was already `True` from `A`. Boolean flags OR together across the MRO — if any class sets one to `True`, the combined config has it as `True`. The `imports` set is unioned across all parents.
 
 ## Error Handling
 
@@ -224,22 +237,20 @@ Use `persistent=False` for a fresh session on the sub-agent. **Avoid circular A�
 
 ## Media Handling
 
-```python
-# 1. User provides image
-result = await agent.invoke_agent("describe this", image="/path/img.jpg")
+Images reach the agent in two ways:
 
-# 2. Developer pushes from within a @tool (runner auto-injected)
+**1. User provides at invoke time:**
+```python
+result = await agent.invoke_agent("describe this", image="/path/img.jpg")
+```
+
+**2. Developer pushes from within a `@tool` (runner auto-injected):**
+```python
 @tool
 async def send_chart(self, runner) -> str:
     with open("chart.png", "rb") as f:
         await self._send_media(data=f.read(), mime_type="image/png", runner=runner)
     return "sent"
-
-# 3. Agent self-initiated (requires allow_media_access=True)
-@agentic_object(allow_media_access=True)
-class ImgAnalyst(AgenticObject):
-    """You read images."""
-    # agent calls read_media to load images during reasoning
 ```
 
 ## Key Principles
