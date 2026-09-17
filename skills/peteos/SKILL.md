@@ -260,6 +260,40 @@ class ImgAnalyst(AgenticObject):
 
 8. **Sandboxing for complex logic** — With `allow_code_execution=True`, the agent can write Python that calls `@sandbox` helpers for iterative or bulk operations.
 
+## Writing Agent-Facing Text
+
+The class docstring is the **system prompt**. Method docstrings are **tool descriptions**. Return values become messages the agent sees. All of this text is written for the agent, not for a developer reading the code.
+
+### General
+
+- **Write facing the agent.** Use "you" to address the agent directly. The agent does not see the source code — it only sees these texts.
+- **Concise and instructive.** Every word should help the agent decide or act. Omit implementation noise.
+- **Treat as the single source of truth.** The agent has no access to the code. If the description is vague, the agent cannot compensate from elsewhere.
+
+### System Prompts
+
+System prompts concatenate in **reverse MRO order** — each one is a fragment in a larger prompt. Write them to read naturally as a continuation of the prior fragment:
+
+- Write as a short role fragment, not a full standalone prompt. Imagine the prior classes' prompts have already been read.
+- Focus on how this class's tools compose with the inherited ones. The agent should know when to use this class's tools in combination with others.
+- Avoid repeating anything already established by parent classes.
+
+### Tool Descriptions
+
+The method docstring is what the agent reads when deciding whether to call a tool. It should:
+
+- Describe **what** the tool does and **when** to reach for it.
+- Cover inputs (what data to provide), outputs (what comes back), and notable side effects.
+- In complicated argument cases, guide argument construction — e.g. which arguments are required vs optional, what format nested data should take.
+
+### Return Values
+
+The return value is the agent's feedback signal. It should:
+
+- Be concise — the agent sees this in its reasoning context.
+- Inform the agent what happened or what to do next. If the result is structured data, briefly indicate what the fields represent.
+- On error paths, the return value can guide the agent toward a fix — for example, naming the missing field rather than returning a raw exception.
+
 ## Configuration
 
 PeteOS auto-loads `peteos.json` on import. Discovery order:
