@@ -332,30 +332,6 @@ Multiple backends can coexist. The model with the highest integer priority value
 | `retry_delays` | float[] | `[0, 1, 3]` | Delay in seconds before each retry attempt. The list defines one delay per retry — e.g., `[0, 1, 3]` means: no delay on first retry, 1 second before second, 3 seconds before third. |
 | `timeout` | float | provider-specific | HTTP request timeout in seconds. |
 
-### Retry Delays
-
-The `retry_delays` list defines retry behavior for failed API calls. Each delay in the list corresponds to one retry attempt:
-
-- `[0, 1, 3]` — First retry: no delay; Second retry: 1 second; Third retry: 3 seconds
-- `[0, 2, 5, 10]` — First retry: no delay; Second: 2s; Third: 5s; Fourth: 10s
-- `[]` or missing — No retries
-
-The delays are exponential backoff by default, but you can customize them for your use case.
-
-| Field | Type | Default | Purpose |
-|---|---|---|---|
-| `name` | string | _(required)_ | Unique backend identifier. |
-| `url` | string | _(required)_ | API base URL. |
-| `api_type` | string | auto-detected | API provider: `"openai"`, `"anthropic"`, or `"gemini"`. |
-| `api_key` | string | | API key for authentication. |
-| `chat_endpoint` | string | API-specific default | Custom chat endpoint path (e.g. `/chat/completions`). |
-| `models_endpoint` | string | API-specific default | Custom models endpoint path. |
-| `streaming` | bool | `false` | Use streaming mode by default. |
-| `max_tokens` | int | `4096` | Maximum tokens to generate. |
-| `model_priorities` | object | `{}` | Map of model IDs to priority integers. Higher values take precedence. |
-| `retry_delays` | float[] | `[0, 1, 3]` | Delay in seconds before each retry attempt. |
-| `timeout` | float | provider-specific | HTTP request timeout in seconds. |
-
 ```json
 {
   "backends": [
