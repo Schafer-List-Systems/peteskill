@@ -318,6 +318,20 @@ PeteOS auto-loads `peteos.json` on import. Discovery order:
 
 Multiple backends can coexist. The model with the highest integer priority value across all backends wins. The `retry_delays` list defines delays in seconds before each retry attempt.
 
+| Field | Type | Default | Purpose |
+|---|---|---|---|
+| `name` | string | _(required)_ | Unique backend identifier. |
+| `url` | string | _(required)_ | API base URL. |
+| `api_type` | string | auto-detected | API provider: `"openai"`, `"anthropic"`, or `"gemini"`. |
+| `api_key` | string | | API key for authentication. |
+| `chat_endpoint` | string | API-specific default | Custom chat endpoint path (e.g. `/chat/completions`). |
+| `models_endpoint` | string | API-specific default | Custom models endpoint path. |
+| `streaming` | bool | `false` | Use streaming mode by default. |
+| `max_tokens` | int | `4096` | Maximum tokens to generate. |
+| `model_priorities` | object | `{}` | Map of model IDs to priority integers. Higher values take precedence. |
+| `retry_delays` | float[] | `[0, 1, 3]` | Delay in seconds before each retry attempt. |
+| `timeout` | float | provider-specific | HTTP request timeout in seconds. |
+
 ```json
 {
   "backends": [
