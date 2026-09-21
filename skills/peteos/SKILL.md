@@ -191,6 +191,80 @@ else:
 
 API-level failures (connection, auth) still raise exceptions.
 
+## `invoke_agent()`
+
+Invoke this object's agent with a text prompt. All parameters are keyword-only and optional:
+
+```python
+async def invoke_agent(
+    prompt: str,
+    output_schema: type | None = None,
+    persistent_thread_id: str | None = None,
+    timeout: float | None = None,
+    image: str | None = None,
+) -> Any
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `prompt` | `str` | — | Task description for the agent. |
+| `output_schema` | `type \| None` | `None` | Expected return type. Pass a dataclass, Enum, or any typed class. The agent's response is validated against this schema. |
+| `persistent_thread_id` | `str \| None` | `None` | Session key. If set, reuses or creates a persistent session under this ID. All invocations with the same ID share conversation history. |
+| `timeout` | `float \| None` | `None` | Maximum seconds to wait for the invocation lock and the full agent loop. Raises `TimeoutError` if exceeded. |
+| `image` | `str \| None` | `None` | Local file path or HTTP(S) URL to attach an image to the prompt. |
+
+**Returns** depends on `output_schema`:
+
+| `output_schema` | Return type |
+|---|---|
+| `None` (default) | Assistant's plain text, or `None` if the agent acted silently |
+| `Any` | JSON-parsed if the response is valid JSON, otherwise plain text |
+| `SomeClass` (dataclass, Enum, typed class) | An instance of `SomeClass` — parsed from the response |
+| Agent fails the task | `Error` object — handle with `isinstance(result, Error)` |
+| API or connection breaks | Exception raised — not caught |
+
+**Raises:** `TimeoutError` if the invocation lock cannot be acquired within `timeout`, or if the agent loop exceeds `timeout` seconds.
+
+**Session reuse** (class `B` with `persistent_thread_id`):
+```python
+# First call — starts a new session under "session-abc"
+result1 = await obj.invoke_agent("Do the thing", persistent_thread_id="session-abc")
+
+# Second call with same ID — continues the same conversation
+result2 = await obj.invoke_agent("Keep going", persistent_thread_id="session-abc")
+# Both calls share message history within that session
+```
+
+**Structured output** (class `E` with `output_schema`):
+```python
+@dataclass
+class Stats:
+    count: int
+    total: float
+
+result = await obj.invoke_agent(
+    "Summarize the data",
+    output_schema=Stats,
+)
+# result is a Stats instance, not a string
+```
+
+**Timeout** (class `B`):
+```python
+try:
+    result = await obj.invoke_agent("Complex task", timeout=30.0)
+except TimeoutError:
+    print("Agent did not respond in 30 seconds")
+```
+
+**Image input** (class `B`):
+```python
+result = await obj.invoke_agent(
+    "Describe the chart",
+    image="/path/to/chart.png",
+)
+```
+
 ## Invocation Hooks
 
 Inspect or control lifecycle:
