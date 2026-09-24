@@ -273,15 +273,16 @@ Inspect or control lifecycle:
 await agent.invoke_agent(
     "Do the thing",
     hooks={
-        "on_invoke": [lambda ctx: None],                  # return non-None to abort
-        "on_tool_call": [lambda ctx: None],              # return non-None to deny
-        "before_tool_execution": [lambda tc: None],     # return (False, "reason") to deny
+        "on_invoke": [lambda ctx: None],                    # return non-None to abort
+        "on_tool_call": [lambda ctx: None],                # return non-None to deny
+        "before_tool_execution": [lambda tc: None],       # return (False, "reason") to deny
         "after_tool_execution": [lambda r, tc, s, ok: None],
         "before_send_to_chatbot": [lambda r, ctx: None],
-        "after_step": [lambda r, status: None],         # return ExecStatus to override
+        "after_receive_from_chatbot": [lambda msg: None], # fires on raw response, before append
+        "after_step": [lambda r, status: None],           # return ExecStatus to override
         "after_message_append": [lambda r, msg: None],
         "before_notification_publish": [lambda r, msg: None],
-        "on_truncation_exhausted": [lambda c, m: None], # (counter, max_retries)
+        "on_truncation_exhausted": [lambda c, m: None],   # (counter, max_retries)
         "on_invoke_complete": [lambda ctx: None],
     },
 )
