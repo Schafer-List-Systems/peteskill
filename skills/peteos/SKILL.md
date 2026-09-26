@@ -122,6 +122,27 @@ class E(AgenticObject):
 
 Escalate exposure only when the agent genuinely needs to decide autonomously. Prefer `@sandbox` for composable helpers the agent calls from Python — one `@tool` that loops via a sandbox helper beats many individual `@tool` calls.
 
+**`@tool` with `tool_policy()`:** A nested `tool_policy()` function inside a `@tool` method lets the developer decide whether a specific call is safe, based on the actual arguments. The policy fires inside the `onToolCall` hook — the same gate where other hooks also get their say. The policy reads the method's parameters directly from its enclosing scope, including `self`:
+
+```python
+@tool
+def bash_exec(self, command: str, timeout: int = 30):
+    def tool_policy():
+        if command.split()[0] in {"rm", "curl", "wget"}:
+            return False  # definitely denied
+        if command.split()[0] in {"ls", "pwd", "find", "cat"}:
+            return True   # definitely safe
+        return None      # no opinion — let the system decide
+
+    return self._bash(command, timeout=timeout)
+```
+
+| Return | Effect |
+|---|---|
+| `True` | Approve this call |
+| `False` | Deny this call immediately |
+| `None` | No opinion — defer to other hooks or the system |
+
 ## @agentic_object Decorator Arguments
 
 The `@agentic_object` decorator configures what an agent can do. All arguments are optional booleans defaulting to `False` unless noted:
